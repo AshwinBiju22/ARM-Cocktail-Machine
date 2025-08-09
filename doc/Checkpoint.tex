@@ -1,0 +1,90 @@
+\documentclass[9.5pt]{article}
+\usepackage[a4paper, margin=1.8cm]{geometry}
+\usepackage{graphicx}
+\usepackage{enumitem}
+\usepackage{titling}
+\usepackage{parskip}
+\usepackage{minted}
+\setlength{\droptitle}{-6em}
+\usepackage{titlesec}
+
+\titlespacing*{\section}{0pt}{1.5ex plus .2ex minus .2ex}{0.8ex plus .2ex}
+\titlespacing*{\subsection}{0pt}{1.2ex plus .2ex minus .2ex}{0.5ex plus .2ex}
+
+
+\title{C Project Emulator Report}
+\author{Dorian Turner, Ashwin Biju, Michael Song, Timofey Kolesnichenko}
+\date{} 
+
+\begin{document}
+\maketitle
+\vspace{-45pt}
+\rule{\linewidth}{0.4pt}
+
+\vspace{-0.5em}
+\noindent\textbf{Abstract:} This report outlines our group's division of tasks and coordination strategy for developing a C-based ARMv8 emulator. It highlights our teamwork dynamics, describes the emulator’s structure and potential reusability for the assembler, and identifies anticipated challenges with planned mitigation approaches.
+\vspace{0em}
+
+% Ashwin Section
+\section{Work Distribution and Coordination}
+\subsection{Task Allocation}
+Our group decomposed the emulator task into separate components using the GitLab issue tracker. We delegated tasks based on each of our strengths:
+
+\begin{itemize}[leftmargin=1.5em, itemsep=0pt, topsep=0pt]
+    \item \textbf{Dorian Turner}: Move operations, Fetch logic, Decode and execute logic for DP Immediate and Register operations
+    \item \textbf{Ashwin Biju}: Arithmetic logic for Immediate and Register instructions, Decode and execute logic for Branching operations
+    \item \textbf{Tim Kolesnichenko}: Bit manipulation utilities, Register and memory manipulation logic, Logical operation implementations
+    \item \textbf{Michael Song}: Binary loader, Load/Store instruction logic, Decode and execute logic for Load/Store operations
+\end{itemize}
+
+\subsection{Communication Methods}
+We coordinated via a WhatsApp group for real-time updates, conducted weekly meetings to resolve issues, and performed debugging and reviews of the code. Major design decisions were discussed in meetings to ensure team-wide agreement and understanding.
+
+\subsection{Collaboration Tools}
+We use a private GitLab repository for collaboration and tracking changes in our codebase:
+\begin{itemize}[leftmargin=1.5em, itemsep=0pt, topsep=0pt]
+    \item \textbf{Git}: Version control
+    \item \textbf{Issues/Boards}: Task tracking and assignment
+    \item \textbf{Merge Requests}: Peer-reviewed code integration
+\end{itemize}
+We collaboratively write LaTeX documents using Overleaf.
+
+% Dorian Section
+\section{Team Dynamics}
+\subsection{Current Group Performance}
+Currently, our group is working efficiently and meeting internal deadlines. Our communication is strong, with all members readily available via WhatsApp instant messaging. This enables us to quickly flag and resolve minor issues as they arise, allowing the project to proceed smoothly. Each team member has reliably completed their assigned tasks, and we maintain accountability through regular check-ins. We are happy with our group's ability to collaborate in ensuring code is functional and correct; having multiple people review code helps a lot with debugging and resolving failing tests. 
+
+\noindent However, we have identified several areas for improvement that have become prominent as the project has progressed. While instant messaging allows us to quickly solve small issues, we struggled with coordinating an overall project structure. To avoid affecting each other's work, we resorted to file sprawl, creating new files for each person's task even when tasks should be worked on in the same file. We believe this stems from a lack of initial architecture planning where an "ideal" skeleton file structure is chosen and then expanded as needed. Currently, while tasks are clear, how they should be integrated into the project often is not.
+
+\subsection{How We Aim to Change}
+\noindent Looking ahead to the assembler and extension phases, we recognize that our current ad-hoc approach will not scale well. The later tasks will require more coordination and planning due to their increasing scope and open-endedness. \newline
+\noindent Since our main issue was architectural planning, we will approach future tasks differently. We aim to decide on a file structure and gain a solid understanding of all required components before implementing parts. Specifically, we plan to hold dedicated architecture planning sessions to decide on module interfaces, data structures, and integration points.
+
+% Michael Section
+\section{Emulator Structure and Reusability}
+\subsection{Design Overview}
+Our emulator has been designed with a modular approach for clarity and maintainability as well as ease of testing.
+Each file aims to target a specific subsystem, e.g. memory management, register access, bit manipulation, FDE control, etc. We used a Makefile to manage compilation and linking, enabling individual compilation of specific programs while producing a single executable. Header files expose shared functions and utilities via \texttt{include} statements, allowing programs to interact cleanly with each other across the repository.
+\subsection{Modular Components for Assembler Reuse}
+Modules that can be directly or indirectly reused for the assembler include:
+\begin{itemize}[leftmargin=1.5em, itemsep=0pt]
+    \item \textbf{bit\_utils}: This module provides important bit manipulation functions, which will be used for both decoding instructions in the emulator and encoding them in the assembler, and so will likely be directly shared without modification between both components.
+    \item \textbf{emu\_memory and emu\_registers}: These can be reused to inform the assembler on memory structure and binary emission routines, e.g. representing binary in little-endian. This would maximise reuse of code, also benefitting from already-tested logic. However, this doubles the data transfers, so a more efficient pipeline would be to directly write the instructions to the output file in little-endian format. We chose the second strategy for efficiency, requiring a utility function to convert 32-bit instructions to their little-endian sequence.
+\end{itemize}
+
+% Tim Section
+\section{Challenges and Mitigation Strategies}
+\subsection{Handling of Aliases}
+The instruction set includes several alias instructions (e.g.  \mintinline{C}{cmp}, \mintinline{C}{tst}, \mintinline{C}{mov}, \mintinline{C}{mul}) which expand to canonical instructions, implicitly setting certain operands to \mintinline{C}{xzr}. Handling these separately would duplicate code, so we need a way to standardise the instruction set and handle each subset of instructions efficiently. For this, we will be using an intermediate representation which separates the different \textit{supertypes} of instructions (e.g. \mintinline{C}{madd} and \mintinline{C}{msub} differing by one bit, simplifying all multiplication into one \textit{supertype}), while also facilitating easy integration between the parser and encoders. This allows for alias resolution to occur early (in the parser phase), eliminating special handling downstream in the encoding phase. 
+
+\subsection{Handling of Labels}
+Labels could be forward-referenced, meaning that the computed offsets would not be known during the first pass of parsing. To facilitate this, we have adopted a two-pass assembler architecture. Our first pass will populate a symbol table (implemented as a hashmap for efficient writes and reads) associating labels with their instruction address. The second pass emits instructions, replacing any labels with offsets computed from the current program counter and the address associated with the label. This approach has advantages in the form of a simpler codebase. This leads to the parsing and encoding being two distinct sections, whereas they would have to be intertwined in a backpatching one-pass implementation. A simpler codebase is also more maintainable, reducing frequency of bugs, and improving the speed of resolution of bugs.
+
+\subsection{Handling of Complex Operands}
+There are several challenges related to rich operand encodings of the AArch64 instruction set. Parsing and encoding these different operand forms is a challenge, due to the wide variability in syntax. To mitigate this challenge, we have decided that the intermediate representation discussed above should use a generic \mintinline{C}{Operand} type, implemented using a \mintinline{C}{union} field to handle each type of operand while maintaining a clean intermediate representation \mintinline{C}{struct} containing a metadata field to indicate what type of operand it is. This design enables consistent operand handling across all instructions, decoupling the parser and encoding stages of the assembler, allowing the group to split the work effectively while also reducing duplicate code.
+
+\subsection{Testing}
+Maintaining correctness is a challenge when dealing with such a big project as a full assembler. We found ourselves dedicating as much time to writing tests as we did to writing code in the process of implementing the emulator. In order to minimise this, we will leverage the provided \mintinline{C}{.s} inputs and corresponding \mintinline{C}{.out} outputs as test cases. Our approach focuses on early integration testing, so first the core infrastructure of the assembler (parser, intermediate representation, file I/O) and incrementally implement and test the encoding for each instruction. This allows for validation against the ground truth from the outset, maximising correctness. 
+
+\end{document}
+
