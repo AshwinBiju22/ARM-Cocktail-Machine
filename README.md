@@ -9,6 +9,14 @@ It consists of three main parts:
 
 ---
 
+## Video Demonstration
+
+Demo : https://drive.google.com/file/d/1PTIabSDr8Tl54NqXwSD3Z43qlzNFioip/view?usp=sharing
+
+Fun Promo Video : https://drive.google.com/file/d/1I7sgab0-bYzxRG-lEcvISB-Q01in2dsy/view?usp=sharing
+
+---
+
 ## Features
 
 ### 1️ARMv8 Assembler
@@ -58,13 +66,6 @@ It consists of three main parts:
 - **Libraries**: `pigpio` (GPIO control), standard C libraries
 - **Tools**: gdb, valgrind, CAD software (Autodesk Fusion), laser cutter, 3D printer
 - **OS**: Raspberry Pi OS (Linux)
-
----
-## Video Demonstration
-
-Demo : https://drive.google.com/file/d/1PTIabSDr8Tl54NqXwSD3Z43qlzNFioip/view?usp=sharing
-
-Fun Promo Video : https://drive.google.com/file/d/1I7sgab0-bYzxRG-lEcvISB-Q01in2dsy/view?usp=sharing
 
 ---
 
