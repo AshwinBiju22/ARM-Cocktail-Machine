@@ -1,0 +1,4 @@
+Install pigpio
+Before running, run "sudo pigpiod"
+
+
