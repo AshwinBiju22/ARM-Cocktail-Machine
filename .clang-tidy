@@ -1,0 +1,21 @@
+Checks: >
+  clang-analyzer-*,          # Static analysis checks
+  bugprone-*,                # Bug-prone patterns
+  readability-*,             # Enforce clean code
+  performance-*,             # Perf-sensitive code
+  portability-*,
+  misc-*,
+  cppcoreguidelines-*,
+  -clang-analyzer-security.insecureAPI.DeprecatedOrUnsafeBufferHandling
+
+WarningsAsErrors: '*'
+CheckOptions:
+  - { key: readability-braces-around-statements.ShortStatementLines, value: 1 }
+  - { key: readability-magic-numbers.IgnoredValues, value: '0,1' }
+  - { key: readability-function-size.LineThreshold, value: '100' }
+  - { key: readability-identifier-naming.VariableCase, value: lower_case }
+  - { key: readability-identifier-naming.FunctionCase, value: lower_case }
+  - { key: readability-identifier-naming.ParameterCase, value: lower_case }
+  - { key: readability-identifier-naming.GlobalConstantCase, value: UPPER_CASE }
+  - { key: readability-identifier-naming.MacroDefinitionCase,value: UPPER_CASE }
+
